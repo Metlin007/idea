@@ -81,7 +81,10 @@
     <button onclick="init()">重玩</button>
   </div>
   <div class="box">
-    <div id="preview"></div>
+    <div id="preview"
+      ondblclick="document.documentElement.style.setProperty('--bgImg', 'url(https://picsum.photos/800/800?t=' + Math.random() + ')')">
+      双击更换图片
+    </div>
     <div id="map"></div>
   </div>
 </body>
