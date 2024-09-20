@@ -137,7 +137,6 @@
 
     for (let i = 0; i < length; ++i) {
       const item = document.createElement('div')
-      item.dataset.id = map[i] + 1
       item.className = 'item'
       item.style.width = itemWidth + 'px'
       item.style.height = itemWidth + 'px'
@@ -203,6 +202,7 @@
     const items = Array.from(document.getElementsByClassName('item'))
     for (let i = 0; i < length; ++i) {
       const item = items[i]
+      item.dataset.id = map[i] + 1
       item.className = showIndex ? 'item help' : 'item'
       if (i == blank) item.classList.add('blank')
       item.style.backgroundPosition = `-${_j(map[i]) * itemWidth}px -${_i(map[i]) * itemWidth}px`
