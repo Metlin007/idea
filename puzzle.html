@@ -39,8 +39,18 @@
       background-image: var(--bgImg);
     }
 
-    .item::before {
+    .help::before {
       content: attr(data-id);
+      display: flex;
+      width: 20%;
+      height: 20%;
+      font-size: large;
+      font-weight: bold;
+      border-radius: 50%;
+      background-color: #ffffff80;
+      align-items: center;
+      justify-content: center;
+      color: black;
     }
 
     .blank {
@@ -127,6 +137,7 @@
 
     for (let i = 0; i < length; ++i) {
       const item = document.createElement('div')
+      item.dataset.id = map[i]
       item.className = 'item'
       item.style.width = itemWidth + 'px'
       item.style.height = itemWidth + 'px'
@@ -192,9 +203,9 @@
     const items = Array.from(document.getElementsByClassName('item'))
     for (let i = 0; i < length; ++i) {
       const item = items[i]
-      item.className = i == blank ? 'item blank' : 'item'
+      item.className = showIndex ? 'item help' : 'item'
+      if (i == blank) item.classList.add('blank')
       item.style.backgroundPosition = `-${_j(map[i]) * itemWidth}px -${_i(map[i]) * itemWidth}px`
-      item.dataset.id = showIndex ? map[i] : ''
     }
   }
 </script>
