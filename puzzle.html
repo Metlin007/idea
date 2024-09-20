@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+  <title>拼图</title>
+  <style>
+    :root {
+      --bgImg: url(https://picsum.photos/800/800);
+    }
+
+    body {
+      background-color: #ddd;
+    }
+
+    #info {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #map {
+      margin: auto;
+      max-width: 600px;
+      width: 100%;
+      flex: 1;
+      background-color: white;
+    }
+
+    .item {
+      margin: 1px;
+      float: left;
+      background-image: var(--bgImg);
+    }
+
+    .item::before {
+      content: attr(data-id);
+    }
+
+    .blank {
+      background-image: none;
+    }
+
+    #preview {
+      margin: 0 auto 20px auto;
+      width: 300px;
+      height: 300px;
+      background-size: cover;
+      background-image: var(--bgImg);
+    }
+
+    @media (min-width: 968px) {
+      .box {
+        flex-direction: row;
+      }
+
+      #preview {
+        margin: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="info">
+    Lv: <select style="margin-right: 10px;" value="3" id="sizeSelect" onchange="init()">
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+    </select>
+    步数: <span id="step" style="margin-right: 10px;"></span>
+    时间: <span id="time"></span>s
+    <label style="margin: 0 10px;"><input type="checkbox" id="help" onchange="update()" />辅助</label>
+    <button onclick="init()">重玩</button>
+  </div>
+  <div class="box">
+    <div id="preview"></div>
+    <div id="map"></div>
+  </div>
+</body>
+<script>
+  const map = []
+  let size
+  let itemWidth
+  let length
+  let blank
+  let status
+  let step
+  let time
+  let interval
+  init()
+
+  // 获取行下标
+  function _i(n) {
+    return Math.floor(n / size)
+  }
+  // 获取列下标
+  function _j(n) {
+    return n % size
+  }
+  // 初始化游戏
+  function init() {
+    size = document.getElementById('sizeSelect').value
+    length = size * size
+    blank = length - 1
+    status = 0
+    step = 0
+    time = 0
+    document.getElementById('time').innerText = time
+
+    do { randomMap() } while (invalid())
+
+    // 初始化节点
+    const mapElement = document.getElementById('map')
+    itemWidth = Math.floor(mapElement.scrollWidth / size) - 2
+    mapElement.innerHTML = ''
+
+    for (let i = 0; i < length; ++i) {
+      const item = document.createElement('div')
+      item.className = 'item'
+      item.style.width = itemWidth + 'px'
+      item.style.height = itemWidth + 'px'
+      item.style.backgroundSize = (itemWidth * size) + 'px'
+      item.onclick = () => move(i)
+      mapElement.appendChild(item)
+    }
+
+    update()
+
+    // 计时器
+    if (interval) clearInterval(interval)
+    interval = setInterval("document.getElementById('time').innerText = ++time;", 1000);
+  }
+  // 生成随机地图
+  function randomMap() {
+    map.length = 0
+    for (let i = 0; i < length; ++i) map.push(i);
+    // 打乱顺序
+    for (let i = length - 1; i > 0; --i) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [map[i], map[j]] = [map[j], map[i]];
+    }
+  }
+  // 判断地图是否无效
+  function invalid() {
+    // 逆序对个数与空白块在目标矩阵中的位置坐标之和
+    let con = _i(map[blank]) + _j(map[blank])
+    for (let i = 0; i < length - 1; ++i)
+      for (let j = i + 1; j < length; ++j)
+        if (map[i] > map[j]) ++con
+    return con & 1
+  }
+  // 移动拼图
+  function move(i) {
+    if (status) return
+
+    const i0 = _i(i)
+    const i1 = _i(blank)
+    const j0 = _j(i)
+    const j1 = _j(blank)
+    if (i0 == i1 && Math.abs(j0 - j1) === 1 || j0 == j1 && Math.abs(i0 - i1) === 1) {
+      step++
+      [map[i], map[blank], blank] = [map[blank], map[i], i]
+      update()
+      if (isWin()) setTimeout(gameover, 0)
+    }
+  }
+  // 判断是否胜利
+  function isWin() {
+    return map.join('') == [...Array(length).keys()].join('')
+  }
+  // 游戏结束
+  function gameover() {
+    clearInterval(interval)
+    status = 1
+    alert('胜利！')
+  }
+  // 更新节点
+  function update() {
+    document.getElementById('step').innerText = step
+    const showIndex = document.getElementById('help').checked
+    const items = Array.from(document.getElementsByClassName('item'))
+    for (let i = 0; i < length; ++i) {
+      const item = items[i]
+      item.className = i == blank ? 'item blank' : 'item'
+      item.style.backgroundPosition = `-${_j(map[i]) * itemWidth}px -${_i(map[i]) * itemWidth}px`
+      item.dataset.id = showIndex ? map[i] : ''
+    }
+  }
+</script>
+
+</html>
