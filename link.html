@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>连连看</title>
+</head>
+
+<body>
+
+</body>
+<script>
+    let map
+    let size
+    let selected
+
+    init()
+
+    // 初始化
+    function init() {
+        selected = null
+        size = 10
+
+        generateMap()
+        console.table(map)
+    }
+    // 生成地图
+    function generateMap() {
+        const length = size * size
+
+        // 获取随机数组
+        const list = []
+        for (let i = 0; i < length / 2; ++i) {
+            const t = Math.floor(1 + Math.random() * 20)
+            list.push(t)
+            list.push(t)
+        }
+        // 打乱顺序
+        for (let i = length - 1; i > 0; --i) {
+            const t = Math.floor(Math.random() * (i + 1))
+            const temp = list[i]
+            list[i] = list[t]
+            list[t] = temp
+        }
+
+        // 初始化地图
+        map = []
+        for (let i = 0; i <= size + 1; ++i) {
+            map[i] = []
+            for (let j = 0; j <= size + 1; ++j)
+                map[i][j] = i == 0 || j == 0 || i == size + 1 || j == size + 1 ? 0 : list[(i - 1) * size + j - 1]
+        }
+    }
+    // 选择方块
+    function select(i, j) {
+        let p = [i, j]
+        selected = selected && link(p) ? null : p
+    }
+    // 连接方块
+    function link(p) {
+        const path = getLinkPath(selected, p)
+        if (!path) return false
+
+        map[selected[0]][selected[1]] = 0
+        map[p[0]][p[1]] = 0
+        update(path)
+
+        return true
+    }
+    // 更新地图
+    function update(path) {
+        for (let p of path) map[p[0]][p[1]] = 0
+    }
+    // 获取路径
+    function getLinkPath(a, b) {
+        return get0foldPath(a, b) || get1foldPath(a, b) || get2foldPath(a, b)
+    }
+    // 0折连接路径（直连路径）
+    function get0foldPath(a, b) {
+        if (a[0] != b[0] && a[1] != b[1]) return
+
+        if (a[0] == b[0]) {
+            for (let i = Math.min(a[1], b[1]) + 1; i < Math.max(a[1], b[1]); ++i)
+                if (map[a[0]][i] != 0) return
+        } else {
+            for (let i = Math.min(a[0], b[0]) + 1; i < Math.max(a[0], b[0]); ++i)
+                if (map[i][a[1]] != 0) return
+        }
+        return [a, b]
+    }
+    // 1折连接路径
+    function get1foldPath(a, b) {
+        for (let p of [[a[0], b[1]], [b[0], a[1]]])
+            if (get0foldPath(a, p) && get0foldPath(p, b))
+                return [a, p, b]
+    }
+    // 2折连接路径
+    function get2foldPath(a, b) {
+        for (let i = a[0] + 1; i < map.length; ++i) {
+            if (map[i][a[1]]) break
+            let path = get1foldPath([i, a[1]], b)
+            if (path) return [a, ...path]
+        }
+        for (let i = a[0] - 1; i >= 0; --i) {
+            if (map[i][a[1]]) break
+            let path = get1foldPath([i, a[1]], b)
+            if (path) return [a, ...path]
+        }
+        for (let j = a[1] + 1; j < map[0].length; ++j) {
+            if (map[a[0]][j]) break
+            let path = get1foldPath([a[0], j], b)
+            if (path) return [a, ...path]
+        }
+        for (let j = a[1] - 1; j >= 0; --j) {
+            if (map[a[0]][j]) break
+            let path = get1foldPath([a[0], j], b)
+            if (path) return [a, ...path]
+        }
+    }
+</script>
+
+</html>
