@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no,viewport-fit=cover">
   <title>拼图</title>
   <style>
     :root {
@@ -13,6 +13,10 @@
 
     body {
       background-color: #ddd;
+      /* 兼容 iOS < 11.2 */
+      padding-bottom: constant(safe-area-inset-bottom);
+      /* 兼容 iOS >= 11.2 */
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
     #info {
@@ -59,8 +63,8 @@
 
     #preview {
       margin: 0 auto 20px auto;
-      width: 300px;
-      height: 300px;
+      width: 250px;
+      height: 250px;
       background-size: cover;
       background-image: var(--bgImg);
     }
@@ -91,10 +95,7 @@
     <button onclick="init()">重玩</button>
   </div>
   <div class="box">
-    <div id="preview"
-      ondblclick="document.documentElement.style.setProperty('--bgImg', 'url(https://picsum.photos/800/800?t=' + Math.random() + ')')">
-      双击更换图片
-    </div>
+    <div id="preview" ondblclick="changeImage()">双击更换图片</div>
     <div id="map"></div>
   </div>
 </body>
@@ -181,8 +182,8 @@
     if (i0 == i1 && Math.abs(j0 - j1) === 1 || j0 == j1 && Math.abs(i0 - i1) === 1) {
       step++
       [map[i], map[blank], blank] = [map[blank], map[i], i]
+      if (isWin()) gameover()
       update()
-      if (isWin()) setTimeout(gameover, 0)
     }
   }
   // 判断是否胜利
@@ -193,7 +194,7 @@
   function gameover() {
     clearInterval(interval)
     status = 1
-    alert('胜利！')
+    setTimeout("alert('胜利！')", 10);
   }
   // 更新节点
   function update() {
@@ -204,9 +205,13 @@
       const item = items[i]
       item.dataset.id = map[i] + 1
       item.className = showIndex ? 'item help' : 'item'
-      if (i == blank) item.classList.add('blank')
+      if (!status && i == blank) item.classList.add('blank')
       item.style.backgroundPosition = `-${_j(map[i]) * itemWidth}px -${_i(map[i]) * itemWidth}px`
     }
+  }
+  function changeImage() {
+    document.documentElement.style.setProperty('--bgImg', 'url(https://picsum.photos/800/800?t=' + Math.random() + ')');
+    init();
   }
 </script>
 
