@@ -24,6 +24,11 @@
       margin: 20px 0;
     }
 
+    #info select {
+      margin-right: 10px;
+      text-align: center;
+    }
+
     .box {
       display: flex;
       flex-direction: column;
@@ -83,11 +88,11 @@
 
 <body>
   <div id="info">
-    Lv: <select style="margin-right: 10px;" value="3" id="sizeSelect" onchange="init()">
-      <option value="3">3</option>
-      <option value="4">4</option>
-      <option value="5">5</option>
-      <option value="6">6</option>
+    <select value="3" id="sizeSelect" onchange="init()">
+      <option value="3">3x3</option>
+      <option value="4">4x4</option>
+      <option value="5">5x5</option>
+      <option value="6">6x6</option>
     </select>
     步数: <span id="step" style="margin-right: 10px;"></span>
     时间: <span id="time"></span>s
