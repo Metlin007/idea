@@ -24,25 +24,9 @@
             text-align: center;
         }
 
-        #map {
-            display: flex;
-            flex-wrap: wrap;
-            margin: auto;
-            max-width: 600px;
+        #canvas {
             width: 100%;
-        }
-
-        .item {
-            background-color: aliceblue;
-            margin: 1px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-sizing: border-box;
-        }
-
-        .selected {
-            border: 1px solid red;
+            background-color: white;
         }
     </style>
 </head>
@@ -57,9 +41,19 @@
         时间: <span id="time"></span>s
         <button onclick="init()" style="margin-left: 10px;">重玩</button>
     </div>
-    <div id="map"></div>
+    <canvas id="canvas"></canvas>
 </body>
 <script>
+    let canvas = document.getElementById('canvas')
+    let ctx = canvas.getContext('2d');
+    let width = canvas.offsetWidth
+    canvas.style.height = width + 'px';
+    canvas.width = width
+    canvas.height = width
+
+    let padding = 15
+    let innerWidth = width - padding * 2
+    let itemWidth
     let map
     let size
     let selected
@@ -68,10 +62,19 @@
     let time
     init()
 
+    canvas.onclick = function (e) {
+        let x = e.offsetX
+        let y = e.offsetY
+        let i = Math.floor((y - padding) / itemWidth)
+        let j = Math.floor((x - padding) / itemWidth)
+        select(i + 1, j + 1)
+    }
+
     // 初始化
     function init() {
         selected = null
         size = parseInt(sizeSelect.value)
+        itemWidth = innerWidth / size
         count = size * size
         document.getElementById('count').innerText = count
         time = 0
@@ -107,21 +110,7 @@
                 map[i][j] = i == 0 || j == 0 || i == size + 1 || j == size + 1 ? 0 : list[(i - 1) * size + j - 1]
         }
 
-        // 初始化节点
-        const mapElement = document.getElementById('map')
-        itemWidth = Math.floor(mapElement.scrollWidth / size) - 2
-        mapElement.innerHTML = ''
-        for (let i = 1; i <= size; ++i) {
-            for (let j = 1; j <= size; ++j) {
-                const item = document.createElement('div')
-                item.className = 'item'
-                item.style.width = itemWidth + 'px'
-                item.style.height = itemWidth + 'px'
-                item.innerText = map[i][j]
-                item.onclick = () => select(i, j)
-                mapElement.appendChild(item)
-            }
-        }
+        update()
     }
     // 选择方块
     function select(i, j) {
@@ -136,27 +125,68 @@
             map[p[0]][p[1]] = 0
             selected = null
             count -= 2
-            if (count == 0) {
-                clearInterval(interval)
-                setTimeout('alert("胜利！");', 10)
-            }
         }
-        update()
+
+        update(path)
     }
     // 更新地图
     function update(path) {
         document.getElementById('count').innerText = count
-        document.getElementById('map').querySelectorAll('.item').forEach((item, index) => {
-            let [i, j] = [Math.floor(index / size) + 1, index % size + 1]
-            item.className = 'item'
-            if (selected && selected[0] == i && selected[1] == j) {
-                item.classList.add('selected')
+        if (count == 0) {
+            clearInterval(interval)
+            setTimeout('alert("胜利！");', 10)
+        }
+        draw(path)
+    }
+    function draw(path) {
+        ctx.clearRect(0, 0, width, width)
+        // 绘制方块
+        ctx.fillStyle = 'aliceblue'
+        for (let i = 1; i <= size; ++i) {
+            for (let j = 1; j <= size; ++j) {
+                if (map[i][j]) ctx.fillRect(padding + (j - 1) * itemWidth + 1, padding + (i - 1) * itemWidth + 1, itemWidth - 2, itemWidth - 2)
             }
-            if (map[i][j] == 0) {
-                item.style.backgroundColor = 'transparent'
-                item.innerText = ''
+        }
+        // 绘制文字
+        ctx.font = '18px Arial'
+        ctx.fillStyle = 'black'
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (let i = 1; i <= size; ++i) {
+            for (let j = 1; j <= size; ++j) {
+                if (map[i][j]) ctx.fillText(
+                    map[i][j],
+                    padding + (j - 1) * itemWidth + itemWidth / 2,
+                    padding + (i - 1) * itemWidth + itemWidth / 2
+                )
             }
-        })
+        }
+        // 绘制边框
+        if (selected) {
+            ctx.strokeStyle = 'red'
+            ctx.strokeRect(
+                padding + (selected[1] - 1) * itemWidth,
+                padding + (selected[0] - 1) * itemWidth,
+                itemWidth,
+                itemWidth
+            )
+        }
+        // 绘制连线
+        if (path) {
+            console.log(path)
+            ctx.strokeStyle = 'blue'
+            ctx.beginPath();
+            for (let i = 0; i < path.length - 1; i++) {
+                if (i === 0) ctx.moveTo(px(path[i][1]), px(path[i][0]));
+                ctx.lineTo(px(path[i + 1][1]), px(path[i + 1][0]));
+            }
+            ctx.stroke();
+        }
+    }
+    function px(i) {
+        if (i == 0) return padding / 2
+        if (i == size + 1) return width - padding / 2
+        return padding + (i - 1) * itemWidth + itemWidth / 2
     }
     // 获取路径
     function getLinkPath(a, b) {
