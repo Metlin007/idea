@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>乐趣方块</title>
+    <style>
+        .row {
+            display: flex;
+        }
+
+        body {
+            height: 100vh;
+            padding: 10px;
+            margin: 0;
+            border: 0;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #ddd;
+            /* 兼容 iOS < 11.2 */
+            padding-bottom: constant(safe-area-inset-bottom);
+            /* 兼容 iOS >= 11.2 */
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .info {
+            display: flex;
+            justify-content: center;
+        }
+
+        #nextElement {
+            background-color: #0f0f0f;
+            aspect-ratio: 1 / 1;
+            border-radius: 5px;
+            overflow: hidden;
+            width: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #map {
+            background-color: #0f0f0f;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        #map>div>div {
+            flex: 1;
+            /* 设置宽高比为1:1 */
+            aspect-ratio: 1 / 1;
+        }
+
+        #map>div:nth-child(odd)>div:nth-child(odd),
+        #map>div:nth-child(even)>div:nth-child(even) {
+            background-color: #2e2d2d;
+        }
+
+        #map .active-node {
+            border-color: #cfcfcf;
+        }
+
+        .blockbox {
+            background-color: #0f0f0f;
+            flex: 1;
+            aspect-ratio: 1 / 1;
+            border-radius: 5px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        .block {
+            display: inline-block;
+            margin: auto;
+        }
+
+        .block-node {
+            box-sizing: border-box;
+            width: 24px;
+            aspect-ratio: 1 / 1;
+            border: 3px solid;
+            border-radius: 2px;
+        }
+
+        .block-node-0 {
+            border-color: transparent;
+            background-color: transparent;
+        }
+
+        .block-node-1 {
+            border-color: #fa5858;
+            background-color: #f72929 !important;
+        }
+
+        .block-node-2 {
+            border-color: #f77d45;
+            background-color: #f76a29 !important;
+        }
+
+        .block-node-3 {
+            border-color: #f7c04f;
+            background-color: #f7a02f !important;
+        }
+
+        .block-node-4 {
+            border-color: #a7d05c;
+            background-color: #8fc02f !important;
+        }
+
+        .block-node-5 {
+            border-color: #5c9fcf;
+            background-color: #2f8fc0 !important;
+        }
+
+        .block-node-6 {
+            border-color: #a7a7cf;
+            background-color: #7f7fc0 !important;
+        }
+
+        .block-node-7 {
+            border-color: #f7a7cf;
+            background-color: #c02f8f !important;
+        }
+    </style>
+    <script>
+        class Block {
+            #typeMap = {
+                Z: [
+                    [1, 1, 0],
+                    [0, 1, 1]
+                ],
+                S: [
+                    [0, 1, 1],
+                    [1, 1, 0]
+                ],
+                X: [
+                    [0, 1, 0],
+                    [1, 1, 1],
+                    [0, 1, 0],
+                ],
+                O: [
+                    [1, 1],
+                    [1, 1],
+                ],
+                C: [
+                    [1, 1],
+                    [1, 0],
+                    [1, 1],
+                ],
+                I1: [[1]],
+                I2: [[1, 1]],
+                I3: [[1, 1, 1]],
+                I4: [[1, 1, 1, 1]],
+                L1: [
+                    [1, 0],
+                    [1, 1],
+                ],
+                L: [
+                    [1, 0],
+                    [1, 0],
+                    [1, 1]
+                ],
+                L3: [
+                    [1, 0, 0],
+                    [1, 0, 0],
+                    [1, 1, 1]
+                ],
+                J: [
+                    [0, 1],
+                    [0, 1],
+                    [1, 1]
+                ],
+                T1: [
+                    [1, 1, 1],
+                    [0, 1, 0]
+                ],
+                T2: [
+                    [1, 1, 1],
+                    [0, 1, 0],
+                    [0, 1, 0],
+                ],
+            }
+            #body = []
+
+            constructor(type) {
+                const types = Object.keys(this.#typeMap)
+                const index = type && this.#typeMap[type]
+                    ? types.indexOf(type)
+                    : Math.floor(Math.random() * types.length)
+                const body = JSON.parse(JSON.stringify(this.#typeMap[types[index]]))
+                this.#body = body
+
+                // 颜色
+                for (let i = 0; i < body.length; i++)
+                    for (let j = 0; j < body[0].length; j++)
+                        if (body[i][j]) body[i][j] = body[i][j] + index % 7
+
+                // 随机旋转
+                const rotateTimes = Math.floor(Math.random() * 4);
+                for (let i = 0; i < rotateTimes; i++) this.rotate()
+            }
+
+            // 旋转
+            rotate() {
+                const body = this.#body
+                const newBody = []
+                for (let j = 0; j < body[0].length; j++) {
+                    const arr = []
+                    for (let i = body.length - 1; i >= 0; i--) {
+                        arr.push(body[i][j])
+                    }
+                    newBody.push(arr)
+                }
+                this.#body = newBody
+            }
+
+            // 创建元素
+            createElement(nodeWidth) {
+                const element = document.createElement('div')
+                element.className = 'block'
+                for (let i = 0; i < this.#body.length; i++) {
+                    const row = document.createElement('div')
+                    row.className = 'row'
+                    for (let j = 0; j < this.#body[i].length; j++) {
+                        const node = document.createElement('div')
+                        node.className = 'block-node block-node-' + this.#body[i][j]
+                        if (nodeWidth) node.style.width = nodeWidth + 'px'
+                        row.append(node)
+                    }
+                    element.append(row)
+                }
+                return element
+            }
+
+            getBody() {
+                return this.#body
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div class="info">
+        <div style="margin-right: 10px;">
+            <div>时间：<span id="timeElement">180s</span></div>
+            <div style="margin: 5px 0;">得分：<span id="scoreElement">40000</span></div>
+            <button onclick="init()" style="width: 100px;">重玩</button>
+        </div>
+        <div style="position: relative;">
+            <div style="position: absolute;color: white;left: 5px; top: 2px;font-size: 12px;">下一个：</div>
+            <div id="nextElement"></div>
+        </div>
+    </div>
+    <div id="map">
+        <script>
+            const size = 10
+            for (let i = 0; i < size; i++) {
+                document.write('<div class="row">')
+                for (let j = 0; j < size; j++)
+                    document.write('<div></div>')
+                document.write('</div>')
+            }
+        </script>
+    </div>
+    <div class="row">
+        <div class="blockbox"></div>
+        <div class="blockbox" style="margin: 0 10px"></div>
+        <div class="blockbox"></div>
+    </div>
+</body>
+<script>
+    let time;
+    let interval;
+    let score
+    let blocks
+    let next
+    let map
+    let activeBlock
+    let blockboxElements = document.querySelectorAll('.blockbox')
+    let clickLock = false
+    const mapNodes = document.querySelectorAll('#map>div>div')
+    const nodeWidth = mapNodes[0].offsetWidth
+    const p0 = mapNodes[0].getBoundingClientRect()
+    const scoreMap = [0, 100, 300, 600, 1000, 2000, 3000]
+
+    // 绑定操作事件
+    blockboxElements.forEach((element, i) => {
+        element.addEventListener('touchstart', (e) => {
+            if (interval) clickLock = true
+        })
+        element.addEventListener('touchmove', (e) => {
+            if (!clickLock) return
+
+            if (!activeBlock) {
+                activeBlock = blocks[i].createElement(nodeWidth)
+                activeBlock.style.position = 'absolute'
+                document.body.appendChild(activeBlock)
+            }
+            const blockBody = blocks[i].getBody()
+            const p = {
+                x: e.touches[0].pageX - blockBody[0].length * nodeWidth / 2,
+                y: e.touches[0].pageY - blockBody.length * nodeWidth
+            }
+            activeBlock.style.left = p.x + 'px'
+            activeBlock.style.top = p.y + 'px'
+
+            element.childNodes[0].style.display = 'none'
+
+            // 预览
+            document.querySelectorAll('.active-node').forEach(node => node.classList.remove('active-node'))
+            const x = Math.round((p.x - p0.x) / nodeWidth)
+            const y = Math.round((p.y - p0.y) / nodeWidth)
+            if (canPush(x, y, blockBody))
+                for (let i = 0; i < blockBody.length; i++)
+                    for (let j = 0; j < blockBody[0].length; j++)
+                        if (blockBody[i][j])
+                            mapNodes[(y + i) * size + x + j].classList.add('active-node')
+        })
+        element.addEventListener('touchend', (e) => {
+            if (activeBlock) {
+                const p = activeBlock.getBoundingClientRect()
+                document.body.removeChild(activeBlock)
+                activeBlock = null
+                const x = Math.round((p.x - p0.x) / nodeWidth)
+                const y = Math.round((p.y - p0.y) / nodeWidth)
+                if (false === pushBlock(x, y, i))
+                    element.childNodes[0].style.display = ''
+                render()
+            } else if (clickLock) {
+                blocks[i].rotate()
+                element.innerHTML = ''
+                element.appendChild(blocks[i].createElement())
+            }
+            clickLock = false
+        })
+    })
+
+    init()
+
+    // 初始化游戏
+    function init() {
+        // 初始化数据
+        time = 180
+        score = 0
+        blocks = [new Block, new Block, new Block]
+        next = new Block
+        initMap()
+
+        if (interval) clearInterval(interval)
+        interval = setInterval(() => {
+            --time
+            timeElement.innerText = time + 's'
+            if (!time) {
+                clearInterval(interval)
+                interval = null
+                if (activeBlock) {
+                    document.body.removeChild(activeBlock)
+                    activeBlock = null
+                    clickLock = false
+                }
+                setTimeout("alert('游戏结束')", 5);
+            }
+        }, 1000)
+
+        // 渲染界面
+        timeElement.innerText = time + 's'
+        render()
+    }
+    // 初始化地图
+    function initMap() {
+        map = []
+        for (let i = 0; i < size; ++i) {
+            const row = []
+            for (let j = 0; j < size; ++j) row.push(0)
+            map.push(row)
+        }
+    }
+    // 渲染
+    function render() {
+        // 渲染得分
+        scoreElement.innerText = score
+
+        // 渲染方块
+        nextElement.innerHTML = ''
+        nextElement.appendChild(next.createElement(15))
+
+        blockboxElements.forEach((e, i) => {
+            e.innerHTML = ''
+            e.appendChild(blocks[i].createElement())
+        });
+
+        // 渲染地图
+        for (let i = 0; i < size; ++i) {
+            for (let j = 0; j < size; ++j)
+                mapNodes[i * size + j].className = 'block-node block-node-' + map[i][j]
+        }
+    }
+    // 放置砖块
+    function pushBlock(x, y, i) {
+        const block = blocks[i].getBody()
+        // 检测方块是否可以放入
+        if (!canPush(x, y, block)) return false
+        // 放入方块
+        for (let i = 0; i < block.length; ++i) {
+            for (let j = 0; j < block[0].length; ++j) {
+                if (block[i][j]) map[i + y][j + x] = block[i][j]
+            }
+        }
+        // 检测消除
+        const cols = []
+        const rows = []
+        let count = 0
+        for (let i = x; i < x + block[0].length; ++i) {
+            let flag = true
+            for (let j = 0; j < size; ++j) {
+                if (map[j][i] == 0) {
+                    flag = false
+                    break
+                }
+            }
+            if (flag) {
+                ++count
+                cols.push(i)
+            }
+        }
+        for (let i = y; i < y + block.length; ++i) {
+            let flag = true
+            for (let j = 0; j < size; ++j) {
+                if (map[i][j] == 0) {
+                    flag = false
+                    break
+                }
+            }
+            if (flag) {
+                ++count
+                rows.push(i)
+            }
+        }
+        // 消除
+        cols.forEach(col => {
+            for (let i = 0; i < size; ++i) map[i][col] = 0
+        })
+        rows.forEach(row => {
+            for (let j = 0; j < size; ++j) map[row][j] = 0
+        })
+        // 计算得分
+        score += scoreMap[count]
+        // 更新方块
+        blocks[i] = next
+        next = new Block
+        // 若地图无法放置方块，则清空
+        for (let block of blocks)
+            for (let i = 0; i < size; ++i)
+                for (let j = 0; j < size; ++j)
+                    if (canPush(j, i, block.getBody())) return
+        initMap()
+        alert('无法放置新方块，清空地图！')
+    }
+    // 检测方块是否可以放入
+    function canPush(x, y, block) {
+        if (x < 0 || y < 0 || x + block[0].length > size || y + block.length > size) return false
+        for (let i = 0; i < block.length; ++i) {
+            for (let j = 0; j < block[0].length; ++j) {
+                if (block[i][j] && map[i + y][j + x]) return false
+            }
+        }
+        return true
+    }
+
+</script>
+
+</html>

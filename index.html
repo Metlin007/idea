@@ -36,7 +36,6 @@
         }
     </style>
     <script src="letter_avatar.js"></script>
-    <script src="template.js"></script>
 </head>
 
 <body>
@@ -51,9 +50,14 @@
     </script>
 </body>
 <script>
+    function Template(id, data) {
+        let t = document.getElementById(id).innerHTML
+        return t.replace(/\<%=([\w\W]*?)%\>/g, (match, key) => data[key] || '')
+    }
     const items = [
         { code: 'puzzle', title: '拼图', desc: '经典滑块拼图小游戏' },
         { code: 'link', title: '连连看', desc: '经典消除小游戏' },
+        { code: 'block', title: '乐趣方块', desc: '' },
     ]
     for (let i = 0; i < items.length; ++i) {
         const html = Template('tpl-item', items[i])
