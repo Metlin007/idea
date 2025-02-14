@@ -11,12 +11,16 @@
             display: flex;
         }
 
+        html {
+            touch-action: none;
+        }
+
         body {
+            max-width: 500px;
             height: 100vh;
             padding: 10px;
-            margin: 0;
+            margin: auto;
             border: 0;
-            touch-action: none;
             user-select: none;
             -webkit-user-select: none;
             background-color: #ddd;
@@ -31,22 +35,11 @@
             justify-content: center;
         }
 
-        #nextElement {
-            background-color: #0f0f0f;
-            aspect-ratio: 1 / 1;
-            border-radius: 5px;
-            overflow: hidden;
-            width: 80px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
         #map {
             background-color: #0f0f0f;
             border-radius: 5px;
             overflow: hidden;
-            margin: 10px 0;
+            margin: 10px auto;
         }
 
         #map>div>div {
@@ -64,7 +57,8 @@
             border-color: #cfcfcf;
         }
 
-        .blockbox {
+        .blockbox,
+        #nextElement {
             background-color: #0f0f0f;
             flex: 1;
             aspect-ratio: 1 / 1;
@@ -72,11 +66,7 @@
             overflow: hidden;
             display: flex;
             justify-content: center;
-        }
-
-        .block {
-            display: inline-block;
-            margin: auto;
+            align-items: center;
         }
 
         .block-node {
@@ -222,7 +212,7 @@
             // 创建元素
             createElement(nodeWidth) {
                 const element = document.createElement('div')
-                element.className = 'block'
+                element.style.display = 'inline-block'
                 for (let i = 0; i < this.#body.length; i++) {
                     const row = document.createElement('div')
                     row.className = 'row'
@@ -253,7 +243,7 @@
         </div>
         <div style="position: relative;">
             <div style="position: absolute;color: white;left: 5px; top: 2px;font-size: 12px;">下一个：</div>
-            <div id="nextElement"></div>
+            <div id="nextElement" style="width: 80px;"></div>
         </div>
     </div>
     <div id="map">
