@@ -11,6 +11,12 @@
             display: flex;
         }
 
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
         .number-animation {
             position: absolute;
             font-size: 24px;
@@ -32,18 +38,12 @@
             }
         }
 
-        html {
-            touch-action: none;
-        }
-
         body {
             max-width: 500px;
             height: 100vh;
             padding: 10px;
             margin: auto;
             border: 0;
-            user-select: none;
-            -webkit-user-select: none;
             background-color: #ddd;
             /* 兼容 iOS < 11.2 */
             padding-bottom: constant(safe-area-inset-bottom);
@@ -56,25 +56,25 @@
             justify-content: center;
         }
 
-        #map {
+        #mapElement {
             background-color: #0f0f0f;
             border-radius: 5px;
             overflow: hidden;
             margin: 10px auto;
         }
 
-        #map>div>div {
+        #mapElement>div>div {
             flex: 1;
             /* 设置宽高比为1:1 */
             aspect-ratio: 1 / 1;
         }
 
-        #map>div:nth-child(odd)>div:nth-child(odd),
-        #map>div:nth-child(even)>div:nth-child(even) {
+        #mapElement>div:nth-child(odd)>div:nth-child(odd),
+        #mapElement>div:nth-child(even)>div:nth-child(even) {
             background-color: #2e2d2d;
         }
 
-        #map .active-node {
+        #mapElement .active-node {
             border-color: #cfcfcf;
         }
 
@@ -267,7 +267,7 @@
             <div id="nextElement" style="width: 80px;"></div>
         </div>
     </div>
-    <div id="map">
+    <div id="mapElement">
         <script>
             const size = 10
             for (let i = 0; i < size; i++) {
@@ -292,10 +292,10 @@
     let blocks
     let next
     let map
-    let activeBlock
+    let activeBlockElement
+    let activeBlock = null
     let blockboxElements = document.querySelectorAll('.blockbox')
-    let clickLock = false
-    const mapNodes = document.querySelectorAll('#map>div>div')
+    const mapNodes = document.querySelectorAll('#mapElement>div>div')
     const nodeWidth = mapNodes[0].offsetWidth
     const p0 = mapNodes[0].getBoundingClientRect()
     const scoreMap = [0, 100, 300, 600, 1000, 2000, 3000]
@@ -303,23 +303,24 @@
     // 绑定操作事件
     blockboxElements.forEach((element, i) => {
         element.addEventListener('touchstart', (e) => {
-            if (interval) clickLock = true
+            e.preventDefault()
+            if (interval && activeBlock === null) activeBlock = i
         })
         element.addEventListener('touchmove', (e) => {
-            if (!clickLock) return
+            if (i !== activeBlock) return
 
-            if (!activeBlock) {
-                activeBlock = blocks[i].createElement(nodeWidth)
-                activeBlock.style.position = 'absolute'
-                document.body.appendChild(activeBlock)
+            if (!activeBlockElement) {
+                activeBlockElement = blocks[i].createElement(nodeWidth)
+                activeBlockElement.style.position = 'absolute'
+                document.body.appendChild(activeBlockElement)
             }
             const blockBody = blocks[i].getBody()
             const p = {
                 x: e.touches[0].pageX - blockBody[0].length * nodeWidth / 2,
                 y: e.touches[0].pageY - blockBody.length * nodeWidth
             }
-            activeBlock.style.left = p.x + 'px'
-            activeBlock.style.top = p.y + 'px'
+            activeBlockElement.style.left = p.x + 'px'
+            activeBlockElement.style.top = p.y + 'px'
 
             element.childNodes[0].style.display = 'none'
 
@@ -334,22 +335,24 @@
                             mapNodes[(y + i) * size + x + j].classList.add('active-node')
         })
         element.addEventListener('touchend', (e) => {
-            if (activeBlock) {
-                const p = activeBlock.getBoundingClientRect()
-                document.body.removeChild(activeBlock)
-                activeBlock = null
+            if (activeBlock !== i) return
+
+            if (activeBlockElement) {
+                const p = activeBlockElement.getBoundingClientRect()
+                document.body.removeChild(activeBlockElement)
+                activeBlockElement = null
                 const x = Math.round((p.x - p0.x) / nodeWidth)
                 const y = Math.round((p.y - p0.y) / nodeWidth)
                 if (false === pushBlock(x, y, i))
                     element.childNodes[0].style.display = ''
                 render()
                 playScoreAnimation(p)
-            } else if (clickLock) {
+            } else {
                 blocks[i].rotate()
                 element.innerHTML = ''
                 element.appendChild(blocks[i].createElement())
             }
-            clickLock = false
+            activeBlock = null
         })
     })
 
@@ -372,10 +375,10 @@
             if (!time) {
                 clearInterval(interval)
                 interval = null
-                if (activeBlock) {
-                    document.body.removeChild(activeBlock)
-                    activeBlock = null
-                    clickLock = false
+                if (activeBlockElement) {
+                    document.body.removeChild(activeBlockElement)
+                    activeBlockElement = null
+                    activeBlock = false
                 }
                 setTimeout("alert('游戏结束')", 5);
             }
