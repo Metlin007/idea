@@ -11,6 +11,27 @@
             display: flex;
         }
 
+        .number-animation {
+            position: absolute;
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+            opacity: 1;
+            animation: moveUpAndFade 1s ease-in-out forwards;
+        }
+
+        @keyframes moveUpAndFade {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+        }
+
         html {
             touch-action: none;
         }
@@ -267,6 +288,7 @@
     let time;
     let interval;
     let score
+    let count
     let blocks
     let next
     let map
@@ -321,6 +343,7 @@
                 if (false === pushBlock(x, y, i))
                     element.childNodes[0].style.display = ''
                 render()
+                playScoreAnimation(p)
             } else if (clickLock) {
                 blocks[i].rotate()
                 element.innerHTML = ''
@@ -337,6 +360,7 @@
         // 初始化数据
         time = 180
         score = 0
+        count = 0
         blocks = [new Block, new Block, new Block]
         next = new Block
         initMap()
@@ -390,6 +414,22 @@
                 mapNodes[i * size + j].className = 'block-node block-node-' + map[i][j]
         }
     }
+    // 播放得分动画
+    function playScoreAnimation(position) {
+        if (!count) return
+
+        const numberAnimation = document.createElement('div');
+        numberAnimation.className = 'number-animation';
+        numberAnimation.innerText = '+' + scoreMap[count];
+        numberAnimation.style.left = position.x + 20 + 'px'
+        numberAnimation.style.top = position.y + 100 + 'px'
+        document.body.appendChild(numberAnimation)
+        numberAnimation.addEventListener('animationend', () => {
+            document.body.removeChild(numberAnimation);
+        });
+
+        count = 0
+    }
     // 放置砖块
     function pushBlock(x, y, i) {
         const block = blocks[i].getBody()
@@ -404,7 +444,7 @@
         // 检测消除
         const cols = []
         const rows = []
-        let count = 0
+        count = 0
         for (let i = x; i < x + block[0].length; ++i) {
             let flag = true
             for (let j = 0; j < size; ++j) {
