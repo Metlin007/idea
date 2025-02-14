@@ -361,7 +361,7 @@
     // 初始化游戏
     function init() {
         // 初始化数据
-        time = 180
+        time = 10
         score = 0
         count = 0
         blocks = [new Block, new Block, new Block]
@@ -378,7 +378,8 @@
                 if (activeBlockElement) {
                     document.body.removeChild(activeBlockElement)
                     activeBlockElement = null
-                    activeBlock = false
+                    blockboxElements[activeBlock].childNodes[0].style.display = ''
+                    activeBlock = null
                 }
                 setTimeout("alert('游戏结束')", 5);
             }
@@ -439,11 +440,10 @@
         // 检测方块是否可以放入
         if (!canPush(x, y, block)) return false
         // 放入方块
-        for (let i = 0; i < block.length; ++i) {
-            for (let j = 0; j < block[0].length; ++j) {
+        for (let i = 0; i < block.length; ++i)
+            for (let j = 0; j < block[0].length; ++j)
                 if (block[i][j]) map[i + y][j + x] = block[i][j]
-            }
-        }
+
         // 检测消除
         const cols = []
         const rows = []
@@ -497,11 +497,9 @@
     // 检测方块是否可以放入
     function canPush(x, y, block) {
         if (x < 0 || y < 0 || x + block[0].length > size || y + block.length > size) return false
-        for (let i = 0; i < block.length; ++i) {
-            for (let j = 0; j < block[0].length; ++j) {
+        for (let i = 0; i < block.length; ++i)
+            for (let j = 0; j < block[0].length; ++j)
                 if (block[i][j] && map[i + y][j + x]) return false
-            }
-        }
         return true
     }
 
