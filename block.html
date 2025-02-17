@@ -317,7 +317,7 @@
             const blockBody = blocks[i].getBody()
             const p = {
                 x: e.touches[0].pageX - blockBody[0].length * nodeWidth / 2,
-                y: e.touches[0].pageY - blockBody.length * nodeWidth
+                y: e.touches[0].pageY - (blockBody.length + 1) * nodeWidth
             }
             activeBlockElement.style.left = p.x + 'px'
             activeBlockElement.style.top = p.y + 'px'
@@ -489,8 +489,15 @@
         // 若地图无法放置方块，则清空
         for (let block of blocks)
             for (let i = 0; i < size; ++i)
-                for (let j = 0; j < size; ++j)
-                    if (canPush(j, i, block.getBody())) return
+                for (let j = 0; j < size; ++j) {
+                    let flag = false
+                    for (let k = 0; k < 4; k++) {
+                        block.rotate()
+                        if (!flag && canPush(j, i, block.getBody()))
+                            flag = true
+                    }
+                    if (flag) return
+                }
         initMap()
         alert('无法放置新方块，清空地图！')
     }
