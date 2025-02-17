@@ -19,7 +19,7 @@
 
         .number-animation {
             position: absolute;
-            font-size: 24px;
+            font-size: 50px;
             color: white;
             font-weight: bold;
             opacity: 1;
@@ -33,7 +33,7 @@
             }
 
             100% {
-                transform: translateY(-50px);
+                transform: translateY(-100px);
                 opacity: 0;
             }
         }
@@ -44,7 +44,7 @@
             padding: 10px;
             margin: auto;
             border: 0;
-            background-color: #ddd;
+            background: linear-gradient(135deg, #47dd5b, #d82d8b);
             /* 兼容 iOS < 11.2 */
             padding-bottom: constant(safe-area-inset-bottom);
             /* 兼容 iOS >= 11.2 */
@@ -316,7 +316,7 @@
             }
             const blockBody = blocks[i].getBody()
             const p = {
-                x: e.touches[0].pageX - blockBody[0].length * nodeWidth / 2,
+                x: e.touches[0].pageX - (blockBody[0].length + 1) * nodeWidth / 2,
                 y: e.touches[0].pageY - (blockBody.length + 1) * nodeWidth
             }
             activeBlockElement.style.left = p.x + 'px'
@@ -346,7 +346,7 @@
                 if (false === pushBlock(x, y, i))
                     element.childNodes[0].style.display = ''
                 render()
-                playScoreAnimation(p)
+                playScoreAnimation()
             } else {
                 blocks[i].rotate()
                 element.innerHTML = ''
@@ -419,14 +419,14 @@
         }
     }
     // 播放得分动画
-    function playScoreAnimation(position) {
+    function playScoreAnimation() {
         if (!count) return
 
         const numberAnimation = document.createElement('div');
         numberAnimation.className = 'number-animation';
         numberAnimation.innerText = '+' + scoreMap[count];
-        numberAnimation.style.left = position.x + 20 + 'px'
-        numberAnimation.style.top = position.y + 100 + 'px'
+        numberAnimation.style.left = (p0.x + 4 * nodeWidth) + 'px'
+        numberAnimation.style.top = (p0.y + 5 * nodeWidth) + 'px'
         document.body.appendChild(numberAnimation)
         numberAnimation.addEventListener('animationend', () => {
             document.body.removeChild(numberAnimation);
