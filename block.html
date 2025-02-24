@@ -56,6 +56,17 @@
             justify-content: center;
         }
 
+        #barElement {
+            height: 5px;
+            width: 80px;
+            background-color: #0f130f;
+            border-radius: 5px;
+            margin-top: 3px;
+            box-sizing: border-box;
+            overflow: hidden;
+            border-left: 50px solid #fffb18;
+        }
+
         #mapElement {
             background-color: #0f0f0f;
             border-radius: 5px;
@@ -257,10 +268,29 @@
 
 <body>
     <div class="info">
-        <div style="margin-right: 10px;">
+        <div>
+            <button onclick="init()">重玩</button>
+            <div style="margin: 5px 0;">
+                <select id="operationSelect">
+                    <option value="1">右手</option>
+                    <option value="0">居中</option>
+                    <option value="-1">左手</option>
+                </select>
+            </div>
+            <div>
+                <select id="modeSelect" onchange="init()">
+                    <option value="0">经典</option>
+                    <option value="1">道具</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin: 0 10px;">
             <div>时间：<span id="timeElement">180s</span></div>
             <div style="margin: 5px 0;">得分：<span id="scoreElement">40000</span></div>
-            <button onclick="init()" style="width: 100px;">重玩</button>
+            <div id="propBar">
+                <div style="font-size: 12px;" id="propElement">0</div>
+                <div id="barElement"></div>
+            </div>
         </div>
         <div style="position: relative;">
             <div style="position: absolute;color: white;left: 5px; top: 2px;font-size: 12px;">下一个：</div>
@@ -299,6 +329,8 @@
     const nodeWidth = mapNodes[0].offsetWidth
     const p0 = mapNodes[0].getBoundingClientRect()
     const scoreMap = [0, 100, 300, 600, 1000, 2000, 3000]
+    let prop
+    let bar
 
     // 绑定操作事件
     blockboxElements.forEach((element, i) => {
@@ -316,7 +348,7 @@
             }
             const blockBody = blocks[i].getBody()
             const p = {
-                x: e.touches[0].pageX - (blockBody[0].length + 1) * nodeWidth / 2,
+                x: e.touches[0].pageX - (blockBody[0].length + parseInt(operationSelect.value)) * nodeWidth / 2,
                 y: e.touches[0].pageY - (blockBody.length + 1) * nodeWidth
             }
             activeBlockElement.style.left = p.x + 'px'
@@ -360,12 +392,28 @@
 
     // 初始化游戏
     function init() {
+        if (modeSelect.value == 1) {
+            prop = 5
+            propBar.style.display = ''
+            nextElement.onclick = () => {
+                if (!prop) return
+                prop--;
+                next = new Block;
+                nextElement.innerHTML = ''
+                nextElement.appendChild(next.createElement(15))
+                propElement.textContent = '刷新：' + prop
+            }
+        } else {
+            nextElement.onclick = null
+            propBar.style.display = 'none'
+        }
         // 初始化数据
         time = 180
         score = 0
         count = 0
         blocks = [new Block, new Block, new Block]
         next = new Block
+        bar = 0
         initMap()
 
         if (interval) clearInterval(interval)
@@ -381,7 +429,7 @@
                     blockboxElements[activeBlock].childNodes[0].style.display = ''
                     activeBlock = null
                 }
-                setTimeout("alert('游戏结束')", 5);
+                setTimeout(`alert('游戏结束，得分：${score}')`, 5);
             }
         }, 1000)
 
@@ -402,6 +450,10 @@
     function render() {
         // 渲染得分
         scoreElement.innerText = score
+
+        // 渲染进度条
+        barElement.style.borderLeftWidth = bar + 'px'
+        propElement.textContent = '刷新：' + prop
 
         // 渲染方块
         nextElement.innerHTML = ''
@@ -483,6 +535,11 @@
         })
         // 计算得分
         score += scoreMap[count]
+        bar += count * 15
+        if (bar >= 80) {
+            prop += Math.floor(bar / 80)
+            bar %= 80
+        }
         // 更新方块
         blocks[i] = next
         next = new Block
