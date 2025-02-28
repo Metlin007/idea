@@ -281,6 +281,7 @@
                 <select id="modeSelect" onchange="init()">
                     <option value="0">经典</option>
                     <option value="1">道具</option>
+                    <option value="2">练习</option>
                 </select>
             </div>
         </div>
@@ -418,8 +419,12 @@
 
         if (interval) clearInterval(interval)
         interval = setInterval(() => {
-            --time
-            timeElement.innerText = time + 's'
+            if (modeSelect.value == 2) {
+                timeElement.innerText = '无限制'
+            } else {
+                --time
+                timeElement.innerText = time + 's'
+            }
             if (!time) {
                 clearInterval(interval)
                 interval = null
