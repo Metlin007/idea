@@ -19,21 +19,21 @@
 
         .number-animation {
             position: absolute;
-            font-size: 50px;
             color: white;
+            font-size: 28px;
             font-weight: bold;
             opacity: 1;
-            animation: moveUpAndFade 1s ease-in-out forwards;
+            animation: moveUpAndFade 0.5s ease-in-out forwards;
         }
 
         @keyframes moveUpAndFade {
             0% {
-                transform: translateY(0);
+                transform: scale(1);
                 opacity: 1;
             }
 
             100% {
-                transform: translateY(-100px);
+                transform: scale(3);
                 opacity: 0;
             }
         }
@@ -54,17 +54,6 @@
         .info {
             display: flex;
             justify-content: center;
-        }
-
-        #barElement {
-            height: 5px;
-            width: 80px;
-            background-color: #0f130f;
-            border-radius: 5px;
-            margin-top: 3px;
-            box-sizing: border-box;
-            overflow: hidden;
-            border-left: 50px solid #fffb18;
         }
 
         #mapElement {
@@ -280,18 +269,13 @@
             <div>
                 <select id="modeSelect" onchange="init()">
                     <option value="0">经典</option>
-                    <option value="1">道具</option>
                     <option value="2">练习</option>
                 </select>
             </div>
         </div>
-        <div style="margin: 0 10px;">
+        <div style="margin: 0 10px; min-width: 100px;">
             <div>时间：<span id="timeElement">180s</span></div>
             <div style="margin: 5px 0;">得分：<span id="scoreElement">40000</span></div>
-            <div id="propBar">
-                <div style="font-size: 12px;" id="propElement">0</div>
-                <div id="barElement"></div>
-            </div>
         </div>
         <div style="position: relative;">
             <div style="position: absolute;color: white;left: 5px; top: 2px;font-size: 12px;">下一个：</div>
@@ -330,8 +314,6 @@
     const nodeWidth = mapNodes[0].offsetWidth
     const p0 = mapNodes[0].getBoundingClientRect()
     const scoreMap = [0, 100, 300, 600, 1000, 2000, 3000]
-    let prop
-    let bar
 
     // 绑定操作事件
     blockboxElements.forEach((element, i) => {
@@ -393,38 +375,18 @@
 
     // 初始化游戏
     function init() {
-        if (modeSelect.value == 1) {
-            prop = 5
-            propBar.style.display = ''
-            nextElement.onclick = () => {
-                if (!prop) return
-                prop--;
-                next = new Block;
-                nextElement.innerHTML = ''
-                nextElement.appendChild(next.createElement(15))
-                propElement.textContent = '刷新：' + prop
-            }
-        } else {
-            nextElement.onclick = null
-            propBar.style.display = 'none'
-        }
         // 初始化数据
         time = 180
         score = 0
         count = 0
         blocks = [new Block, new Block, new Block]
         next = new Block
-        bar = 0
         initMap()
 
         if (interval) clearInterval(interval)
-        interval = setInterval(() => {
-            if (modeSelect.value == 2) {
-                timeElement.innerText = '无限制'
-            } else {
-                --time
-                timeElement.innerText = time + 's'
-            }
+        if (modeSelect.value != 2) interval = setInterval(() => {
+            --time
+            timeElement.innerText = time + 's'
             if (!time) {
                 clearInterval(interval)
                 interval = null
@@ -439,7 +401,7 @@
         }, 1000)
 
         // 渲染界面
-        timeElement.innerText = time + 's'
+        timeElement.innerText = modeSelect.value == 2 ? '--' : time + 's'
         render()
     }
     // 初始化地图
@@ -455,10 +417,6 @@
     function render() {
         // 渲染得分
         scoreElement.innerText = score
-
-        // 渲染进度条
-        barElement.style.borderLeftWidth = bar + 'px'
-        propElement.textContent = '刷新：' + prop
 
         // 渲染方块
         nextElement.innerHTML = ''
@@ -482,8 +440,9 @@
         const numberAnimation = document.createElement('div');
         numberAnimation.className = 'number-animation';
         numberAnimation.innerText = '+' + scoreMap[count];
-        numberAnimation.style.left = (p0.x + 4 * nodeWidth) + 'px'
+        numberAnimation.style.left = (p0.x + 4 * nodeWidth - numberAnimation.scrollWidth / 2) + 'px'
         numberAnimation.style.top = (p0.y + 5 * nodeWidth) + 'px'
+
         document.body.appendChild(numberAnimation)
         numberAnimation.addEventListener('animationend', () => {
             document.body.removeChild(numberAnimation);
@@ -540,11 +499,6 @@
         })
         // 计算得分
         score += scoreMap[count]
-        bar += count * 15
-        if (bar >= 80) {
-            prop += Math.floor(bar / 80)
-            bar %= 80
-        }
         // 更新方块
         blocks[i] = next
         next = new Block
@@ -553,6 +507,7 @@
             for (let i = 0; i < size; ++i)
                 for (let j = 0; j < size; ++j) {
                     let flag = false
+                    // 此处循环4次不得提前退出循环，使方块回到原位不变
                     for (let k = 0; k < 4; k++) {
                         block.rotate()
                         if (!flag && canPush(j, i, block.getBody()))
