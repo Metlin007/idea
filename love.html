@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>爱的弹窗</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- iOS Safari -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Android Chrome -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF6B8B',
+                        secondary: '#FF9E7D',
+                        tertiary: '#FFD166',
+                        background: '#FFF5F7',
+                        textDark: '#4A4A4A'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'bounce-in': 'bounceIn 0.5s ease-out',
+                        'fade-out': 'fadeOut 0.3s ease-in',
+                    },
+                    keyframes: {
+                        bounceIn: {
+                            '0%': { transform: 'scale(0.3)', opacity: '0' },
+                            '40%': { transform: 'scale(1.05)', opacity: '1' },
+                            '80%': { transform: 'scale(0.95)' },
+                            '100%': { transform: 'scale(1)' }
+                        },
+                        fadeOut: {
+                            '0%': { opacity: '1' },
+                            '100%': { opacity: '0', transform: 'scale(0.8)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .popup-shadow {
+                box-shadow: 0 10px 25px -5px rgba(255, 107, 139, 0.1), 0 8px 10px -6px rgba(255, 107, 139, 0.1);
+            }
+            .popup-gradient {
+                background: linear-gradient(135deg, var(--tw-gradient-from) 0%, var(--tw-gradient-to) 100%);
+            }
+            .heart-animation::before {
+                content: '❤️';
+                animation: heartBeat 1.5s infinite;
+            }
+            @keyframes heartBeat {
+                0% { transform: scale(1); }
+                14% { transform: scale(1.3); }
+                28% { transform: scale(1); }
+                42% { transform: scale(1.3); }
+                70% { transform: scale(1); }
+            }
+        }
+    </style>
+    <style>
+        body {
+            overflow: hidden;
+            background-color: #FFF5F7;
+            background-image:
+                radial-gradient(#FF6B8B 0.5px, transparent 0.5px),
+                radial-gradient(#FF6B8B 0.5px, #FFF5F7 0.5px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+
+        .popup-window {
+            position: absolute;
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-width: 280px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            animation: bounceIn 0.5s ease-out;
+            box-shadow: 0 10px 25px -5px rgba(255, 107, 139, 0.1), 0 8px 10px -6px rgba(255, 107, 139, 0.1);
+        }
+
+        .popup-window.closing {
+            animation: fadeOut 0.3s ease-in forwards;
+        }
+
+        .popup-window:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(255, 107, 139, 0.2), 0 10px 10px -5px rgba(255, 107, 139, 0.1);
+        }
+
+        .popup-content {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            color: #4A4A4A;
+            text-align: center;
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            font-size: 1.2rem;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .popup-close:hover {
+            opacity: 1;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 245, 247, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .start-button {
+            padding: 1.2rem 2.4rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #FF6B8B 0%, #FF9E7D 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px -5px rgba(255, 107, 139, 0.4);
+        }
+
+        .start-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px -5px rgba(255, 107, 139, 0.5);
+        }
+
+        .end-message {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            max-width: 500px;
+            box-shadow: 0 20px 25px -5px rgba(255, 107, 139, 0.2);
+        }
+
+        .end-title {
+            font-size: 2rem;
+            color: #FF6B8B;
+            margin-bottom: 1rem;
+        }
+
+        .end-text {
+            font-size: 1.2rem;
+            color: #4A4A4A;
+            margin-bottom: 2rem;
+        }
+
+        .restart-button {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #FF6B8B 0%, #FF9E7D 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(255, 107, 139, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 开始界面 -->
+    <div id="start-overlay" class="overlay">
+        <button id="start-button" class="start-button">
+            <i class="fa fa-heart mr-2"></i>开启爱的告白
+        </button>
+    </div>
+
+    <script>
+        // 关心的话语列表
+        const loveMessages = [
+            "我想你了",
+            "天冷多加衣",
+            "好好照顾自己",
+            "记得按时吃饭",
+            "别太累了，休息一下",
+            "有你真好",
+            "你是我的全世界",
+            "我会一直陪着你",
+            "今天也要开心哦",
+            "多喝水，保持健康",
+            "你的笑容是我的动力",
+            "我永远支持你",
+            "早点休息，做个好梦",
+            "无论何时，我都在这里",
+            "你对我很重要",
+            "记得想我哦",
+            "照顾好自己，就是对我最好的回报",
+            "看到你开心，我就开心",
+            "你是我生命中最美的遇见",
+            "我喜欢你的一切",
+            "有你在身边，每天都是晴天",
+            "别担心，一切都会好起来的",
+            "我相信你",
+            "你真棒",
+            "记得补充能量",
+            "我为你感到骄傲",
+            "你的健康是我最大的心愿",
+            "我愿意为你做任何事",
+            "你让我的生活充满色彩",
+            "和你在一起的时光最美好",
+            "我会一直守护你",
+            "你是我前进的动力",
+            "照顾好自己，我会心疼的",
+            "我对你的爱，比心还深",
+            "你是我生命中的阳光",
+            "每天都在想你",
+            "你让我变得更好",
+            "我喜欢和你在一起",
+            "你的幸福就是我的幸福",
+            "我会永远爱你",
+            "记得保持微笑",
+            "你是我见过最美的风景",
+            "我会一直在你身边",
+            "你是我的唯一",
+            "照顾好自己，我等你回来",
+            "我想和你一起慢慢变老",
+            "你的声音真好听",
+            "我喜欢听你说话",
+            "你笑起来真好看",
+            "我会珍惜和你在一起的每一刻"
+        ];
+
+        // 颜色列表
+        const colors = [
+            { bg: 'bg-gradient-to-br from-pink-300 to-pink-500', text: 'text-white' },
+            { bg: 'bg-gradient-to-br from-orange-300 to-orange-500', text: 'text-white' },
+            { bg: 'bg-gradient-to-br from-yellow-300 to-yellow-500', text: 'text-gray-800' },
+            { bg: 'bg-gradient-to-br from-red-300 to-red-500', text: 'text-white' },
+            { bg: 'bg-gradient-to-br from-purple-300 to-purple-500', text: 'text-white' },
+            { bg: 'bg-gradient-to-br from-blue-300 to-blue-500', text: 'text-white' },
+            { bg: 'bg-gradient-to-br from-green-300 to-green-500', text: 'text-white' },
+            { bg: 'bg-gradient-to-br from-indigo-300 to-indigo-500', text: 'text-white' },
+            { bg: 'bg-gradient-to-br from-pink-200 to-pink-400', text: 'text-white' },
+            { bg: 'bg-gradient-to-br from-orange-200 to-orange-400', text: 'text-white' }
+        ];
+
+        // 已使用的消息索引
+        let usedIndices = [];
+        // 当前显示的窗口数量
+        let currentWindows = 0;
+        // 最大同时显示的窗口数量
+        const maxWindows = 100;
+        // 窗口弹出间隔（毫秒）
+        const popupInterval = 300;
+        // 窗口动画持续时间（毫秒）
+        const animationDuration = 500;
+        // 是否正在显示消息
+        let isShowing = false;
+
+        // DOM元素
+        const startOverlay = document.getElementById('start-overlay');
+        const startButton = document.getElementById('start-button');
+
+        // 开始按钮点击事件
+        startButton.addEventListener('click', startPopupShow);
+
+        // 开始显示弹窗
+        function startPopupShow() {
+            if (isShowing) return;
+
+            isShowing = true;
+            startOverlay.style.display = 'none';
+            usedIndices = [];
+            currentWindows = 0;
+
+            // 开始弹出窗口
+            const popupTimer = setInterval(() => {
+                if (usedIndices.length >= loveMessages.length) {
+                    clearInterval(popupTimer);
+
+                    // 等待所有窗口关闭后显示结束消息
+                    const checkAllClosed = setInterval(() => {
+                        if (currentWindows === 0) {
+                            clearInterval(checkAllClosed);
+                            showEndMessage();
+                            isShowing = false;
+                        }
+                    }, 100);
+                    return;
+                }
+
+                // 如果当前窗口数量小于最大限制，继续弹出
+                if (currentWindows < maxWindows) {
+                    createPopup();
+                }
+            }, popupInterval);
+        }
+
+        // 创建弹窗
+        function createPopup() {
+            // 获取随机未使用的消息索引
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * loveMessages.length);
+            } while (usedIndices.includes(randomIndex));
+
+            usedIndices.push(randomIndex);
+
+            // 获取随机颜色
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+            // 创建弹窗元素
+            const popup = document.createElement('div');
+            popup.className = `popup-window ${randomColor.bg} ${randomColor.text}`;
+
+            // 创建弹窗内容
+            const content = document.createElement('div');
+            content.className = 'popup-content';
+            content.textContent = loveMessages[randomIndex];
+
+            // 创建关闭按钮
+            const closeBtn = document.createElement('div');
+            closeBtn.className = 'popup-close';
+            closeBtn.innerHTML = '<i class="fa fa-times"></i>';
+
+            // 添加元素到弹窗
+            popup.appendChild(content);
+            popup.appendChild(closeBtn);
+
+            // 添加到页面
+            document.body.appendChild(popup);
+
+            // 设置随机位置
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            const popupWidth = popup.offsetWidth;
+            const popupHeight = popup.offsetHeight;
+
+            const maxLeft = windowWidth - popupWidth - 20;
+            const maxTop = windowHeight - popupHeight - 20;
+
+            const left = Math.max(10, Math.floor(Math.random() * maxLeft));
+            const top = Math.max(10, Math.floor(Math.random() * maxTop));
+
+            popup.style.left = `${left}px`;
+            popup.style.top = `${top}px`;
+
+            // 增加当前窗口计数
+            currentWindows++;
+
+            // 添加点击事件
+            popup.addEventListener('click', () => {
+                // 添加关闭动画
+                popup.classList.add('closing');
+
+                // 动画结束后移除元素
+                setTimeout(() => {
+                    document.body.removeChild(popup);
+                    currentWindows--;
+                }, animationDuration);
+            });
+        }
+
+        // 显示结束消息
+        function showEndMessage() {
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+
+            const endMessage = document.createElement('div');
+            endMessage.className = 'end-message';
+
+            const title = document.createElement('div');
+            title.className = 'end-title';
+            title.innerHTML = '<i class="fa fa-heart mr-2"></i>全部说完啦';
+
+            const text = document.createElement('div');
+            text.className = 'end-text';
+            text.textContent = '希望这些话能带给你温暖和快乐，我会一直在这里关心你、爱护你。';
+
+            const restartBtn = document.createElement('button');
+            restartBtn.className = 'restart-button';
+            restartBtn.innerHTML = '<i class="fa fa-refresh mr-2"></i>再来一次';
+            restartBtn.addEventListener('click', () => {
+                document.body.removeChild(overlay);
+                startPopupShow();
+            });
+
+            endMessage.appendChild(title);
+            endMessage.appendChild(text);
+            endMessage.appendChild(restartBtn);
+            overlay.appendChild(endMessage);
+            document.body.appendChild(overlay);
+        }
+    </script>
+</body>
+
+</html>
