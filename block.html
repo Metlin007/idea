@@ -59,6 +59,7 @@
 
         .container {
             padding: 10px;
+            position: relative;
         }
 
         .info {
@@ -266,7 +267,7 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="container" id="container">
         <div class="info">
             <div>
                 <button onclick="init()">重玩</button>
@@ -339,7 +340,7 @@
             if (!activeBlockElement) {
                 activeBlockElement = blocks[i].createElement(nodeWidth)
                 activeBlockElement.style.position = 'absolute'
-                document.body.appendChild(activeBlockElement)
+                document.getElementById('container').appendChild(activeBlockElement)
             }
             const blockBody = blocks[i].getBody()
             const p = {
@@ -366,7 +367,7 @@
 
             if (activeBlockElement) {
                 const p = activeBlockElement.getBoundingClientRect()
-                document.body.removeChild(activeBlockElement)
+                document.getElementById('container').removeChild(activeBlockElement)
                 activeBlockElement = null
                 const x = Math.round((p.x - p0.x) / nodeWidth)
                 const y = Math.round((p.y - p0.y) / nodeWidth)
@@ -403,7 +404,7 @@
                 clearInterval(interval)
                 interval = null
                 if (activeBlockElement) {
-                    document.body.removeChild(activeBlockElement)
+                    document.getElementById('container').removeChild(activeBlockElement)
                     activeBlockElement = null
                     blockboxElements[activeBlock].childNodes[0].style.display = ''
                     activeBlock = null
@@ -455,9 +456,9 @@
         numberAnimation.style.left = (p0.x + 4 * nodeWidth - numberAnimation.scrollWidth / 2) + 'px'
         numberAnimation.style.top = (p0.y + 5 * nodeWidth) + 'px'
 
-        document.body.appendChild(numberAnimation)
+        document.getElementById('container').appendChild(numberAnimation)
         numberAnimation.addEventListener('animationend', () => {
-            document.body.removeChild(numberAnimation);
+            document.getElementById('container').removeChild(numberAnimation);
         });
 
         count = 0
