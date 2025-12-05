@@ -45,14 +45,20 @@
         body {
             max-width: 500px;
             height: 100vh;
-            padding: 10px;
             margin: auto;
             border: 0;
+            padding: 0;
             background: linear-gradient(135deg, #47dd5b, #d82d8b);
             /* 兼容 iOS < 11.2 */
             padding-bottom: constant(safe-area-inset-bottom);
+            padding-top: constant(safe-area-inset-top);
             /* 兼容 iOS >= 11.2 */
             padding-bottom: env(safe-area-inset-bottom);
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .container {
+            padding: 10px;
         }
 
         .info {
@@ -260,47 +266,49 @@
 </head>
 
 <body>
-    <div class="info">
-        <div>
-            <button onclick="init()">重玩</button>
-            <div style="margin: 5px 0;">
-                <select id="operationSelect">
-                    <option value="1">右手</option>
-                    <option value="0">居中</option>
-                    <option value="-1">左手</option>
-                </select>
-            </div>
+    <div class="container">
+        <div class="info">
             <div>
-                <select id="modeSelect" onchange="init()">
-                    <option value="0">经典</option>
-                    <option value="2">练习</option>
-                </select>
+                <button onclick="init()">重玩</button>
+                <div style="margin: 5px 0;">
+                    <select id="operationSelect">
+                        <option value="1">右手</option>
+                        <option value="0">居中</option>
+                        <option value="-1">左手</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="modeSelect" onchange="init()">
+                        <option value="0">经典</option>
+                        <option value="2">练习</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin: 0 10px; min-width: 100px;">
+                <div>时间：<span id="timeElement">180s</span></div>
+                <div style="margin: 5px 0;">得分：<span id="scoreElement">40000</span></div>
+            </div>
+            <div style="position: relative;">
+                <div style="position: absolute;color: white;left: 5px; top: 2px;font-size: 12px;">下一个：</div>
+                <div id="nextElement" style="width: 80px;"></div>
             </div>
         </div>
-        <div style="margin: 0 10px; min-width: 100px;">
-            <div>时间：<span id="timeElement">180s</span></div>
-            <div style="margin: 5px 0;">得分：<span id="scoreElement">40000</span></div>
+        <div id="mapElement">
+            <script>
+                const size = 10
+                for (let i = 0; i < size; i++) {
+                    document.write('<div class="row">')
+                    for (let j = 0; j < size; j++)
+                        document.write('<div></div>')
+                    document.write('</div>')
+                }
+            </script>
         </div>
-        <div style="position: relative;">
-            <div style="position: absolute;color: white;left: 5px; top: 2px;font-size: 12px;">下一个：</div>
-            <div id="nextElement" style="width: 80px;"></div>
+        <div class="row">
+            <div class="blockbox"></div>
+            <div class="blockbox" style="margin: 0 10px"></div>
+            <div class="blockbox"></div>
         </div>
-    </div>
-    <div id="mapElement">
-        <script>
-            const size = 10
-            for (let i = 0; i < size; i++) {
-                document.write('<div class="row">')
-                for (let j = 0; j < size; j++)
-                    document.write('<div></div>')
-                document.write('</div>')
-            }
-        </script>
-    </div>
-    <div class="row">
-        <div class="blockbox"></div>
-        <div class="blockbox" style="margin: 0 10px"></div>
-        <div class="blockbox"></div>
     </div>
 </body>
 <script>
