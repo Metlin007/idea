@@ -267,7 +267,7 @@
 </head>
 
 <body>
-    <div class="container" id="container">
+    <div class="container">
         <div class="info">
             <div>
                 <button onclick="init()">重玩</button>
@@ -325,7 +325,6 @@
     let blockboxElements = document.querySelectorAll('.blockbox')
     const mapNodes = document.querySelectorAll('#mapElement>div>div')
     const nodeWidth = mapNodes[0].offsetWidth
-    const p0 = mapNodes[0].getBoundingClientRect()
     const scoreMap = [0, 100, 300, 600, 1000, 2000, 3000]
 
     // 绑定操作事件
@@ -340,7 +339,7 @@
             if (!activeBlockElement) {
                 activeBlockElement = blocks[i].createElement(nodeWidth)
                 activeBlockElement.style.position = 'absolute'
-                document.getElementById('container').appendChild(activeBlockElement)
+                document.body.appendChild(activeBlockElement)
             }
             const blockBody = blocks[i].getBody()
             const p = {
@@ -349,13 +348,14 @@
             }
             activeBlockElement.style.left = p.x + 'px'
             activeBlockElement.style.top = p.y + 'px'
+            activeBlockElement.dataX = p.x
+            activeBlockElement.dataY = p.y
 
             element.childNodes[0].style.display = 'none'
 
             // 预览
             document.querySelectorAll('.active-node').forEach(node => node.classList.remove('active-node'))
-            const x = Math.round((p.x - p0.x) / nodeWidth)
-            const y = Math.round((p.y - p0.y) / nodeWidth)
+            const { x, y } = getPos()
             if (canPush(x, y, blockBody))
                 for (let i = 0; i < blockBody.length; i++)
                     for (let j = 0; j < blockBody[0].length; j++)
@@ -366,15 +366,13 @@
             if (activeBlock !== i) return
 
             if (activeBlockElement) {
-                const p = activeBlockElement.getBoundingClientRect()
-                document.getElementById('container').removeChild(activeBlockElement)
-                activeBlockElement = null
-                const x = Math.round((p.x - p0.x) / nodeWidth)
-                const y = Math.round((p.y - p0.y) / nodeWidth)
+                const { x, y } = getPos()
                 if (false === pushBlock(x, y, i))
                     element.childNodes[0].style.display = ''
                 render()
-                playScoreAnimation()
+                playScoreAnimation(activeBlockElement.getBoundingClientRect())
+                document.body.removeChild(activeBlockElement)
+                activeBlockElement = null
             } else {
                 blocks[i].rotate()
                 element.innerHTML = ''
@@ -404,7 +402,7 @@
                 clearInterval(interval)
                 interval = null
                 if (activeBlockElement) {
-                    document.getElementById('container').removeChild(activeBlockElement)
+                    document.body.removeChild(activeBlockElement)
                     activeBlockElement = null
                     blockboxElements[activeBlock].childNodes[0].style.display = ''
                     activeBlock = null
@@ -447,18 +445,18 @@
         }
     }
     // 播放得分动画
-    function playScoreAnimation() {
+    function playScoreAnimation(p) {
         if (!count) return
 
         const numberAnimation = document.createElement('div');
         numberAnimation.className = 'number-animation';
         numberAnimation.innerText = '+' + scoreMap[count];
-        numberAnimation.style.left = (p0.x + 4 * nodeWidth - numberAnimation.scrollWidth / 2) + 'px'
-        numberAnimation.style.top = (p0.y + 5 * nodeWidth) + 'px'
+        numberAnimation.style.left = p.x + 'px'
+        numberAnimation.style.top = p.y + 'px'
 
-        document.getElementById('container').appendChild(numberAnimation)
+        document.body.appendChild(numberAnimation)
         numberAnimation.addEventListener('animationend', () => {
-            document.getElementById('container').removeChild(numberAnimation);
+            document.body.removeChild(numberAnimation);
         });
 
         count = 0
@@ -520,7 +518,7 @@
             for (let i = 0; i < size; ++i)
                 for (let j = 0; j < size; ++j) {
                     let flag = false
-                    // 此处循环4次不得提前退出循环，使方块回到原位不变
+                    // 此处循环4次使方块回到原位不变，不得提前退出循环
                     for (let k = 0; k < 4; k++) {
                         block.rotate()
                         if (!flag && canPush(j, i, block.getBody()))
@@ -539,7 +537,14 @@
                 if (block[i][j] && map[i + y][j + x]) return false
         return true
     }
-
+    // 获取方块坐标
+    function getPos() {
+        const p0 = mapNodes[0].getBoundingClientRect()
+        return {
+            x: Math.round((activeBlockElement.dataX - p0.x) / nodeWidth),
+            y: Math.round((activeBlockElement.dataY - p0.y) / nodeWidth)
+        }
+    }
 </script>
 
 </html>
